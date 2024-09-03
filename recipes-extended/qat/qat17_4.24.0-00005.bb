@@ -9,6 +9,7 @@ LIC_FILES_CHKSUM = "\
                     "
 DEPENDS += "boost udev zlib openssl nasm-native"
 PROVIDES += "virtual/qat"
+RPROVIDES:${PN} += "qat"
 
 TARGET_CC_ARCH += "${LDFLAGS}"
 
@@ -170,13 +171,12 @@ do_install() {
 
 SYSROOT_DIRS += "/opt"
 
-PACKAGES += "${PN}-app"
-
 FILES:${PN}-dev = "${QAT_HEADER_FILES}/ \
                    ${nonarch_base_libdir}/*.a \
                    "
 
 FILES:${PN} += "\
+                ${bindir}/* \
                 ${libdir}/ \
                 ${nonarch_base_libdir}/firmware \
                 ${sysconfdir}/ \
@@ -187,11 +187,6 @@ FILES:${PN} += "\
 
 FILES:${PN}-dbg += "${sysconfdir}/init.d/.debug/ \
                     "
-
-FILES:${PN}-app += "${bindir}/* \
-                    ${prefix}/qat \
-                    "
-
 # yasm encodes path to the input file and doesn't provide any option to workaround it.
 INSANE_SKIP:${PN}-staticdev += "buildpaths"
 INSANE_SKIP:${PN}-dbg += "buildpaths"
