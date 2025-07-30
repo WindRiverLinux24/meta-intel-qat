@@ -1,30 +1,11 @@
 DESCRIPTION = "Intel(r) QuickAssist Technology API"
 HOMEPAGE = "https://www.intel.com/content/www/us/en/developer/topic-technology/open/quick-assist-technology/overview.html"
 
-#Dual BSD and GPLv2 License
-LICENSE = "BSD-3-Clause & GPL-2.0-only"
-LIC_FILES_CHKSUM = "\
-                    file://LICENSE.GPL;md5=751419260aa954499f7abaabaa882bbe \
-                    file://LICENSE.BSD;md5=7e3723742f05cc28b730c136742b3b80 \
-                    "
 DEPENDS += "boost udev zlib openssl nasm-native"
 PROVIDES += "virtual/qat"
 RPROVIDES:${PN} += "qat"
 
 TARGET_CC_ARCH += "${LDFLAGS}"
-
-SRC_URI = "https://downloadmirror.intel.com/795697/QAT.L.4.24.0-00005.tar.gz;subdir=qat17 \
-           file://0001-qat-fix-for-cross-compilation-issue.patch \
-           file://0002-qat-remove-local-path-from-makefile.patch \
-           file://0003-qat-override-CC-LD-AR-only-when-it-is-not-define.patch \
-           file://0004-update-KDIR-for-cross-compilation.patch \
-           file://0005-Added-include-dir-path.patch \
-           file://0006-qat-add-install-target-and-add-folder.patch \
-           file://0001-usdm_drv-convert-mutex_lock-to-mutex_trylock-to-avio.patch \
-           file://qat-remove-the-deprecated-pci-dma-compat.h-API.patch \
-           file://fix-redefinition-of-crypto_request_complete.patch \
-           file://build_fix.patch \
-          "
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
@@ -34,7 +15,6 @@ COMPATIBLE_MACHINE = "null"
 COMPATIBLE_HOST:x86-x32 = 'null'
 COMPATIBLE_HOST:libc-musl:class-target = 'null'
 
-S = "${WORKDIR}/qat17"
 ICP_TOOLS = "accelcomp"
 SAMPLE_CODE_DIR = "${S}/quickassist/lookaside/access_layer/src/sample_code"
 QAT_HEADER_FILES = "/opt/intel/QAT/quickassist"
@@ -47,7 +27,7 @@ export ICP_BUILDSYSTEM_PATH = "${S}/quickassist/build_system"
 export ICP_TOOLS_TARGET = "${ICP_TOOLS}"
 export FUNC_PATH = "${ICP_ROOT}/quickassist/lookaside/access_layer/src/sample_code/functional"
 export INSTALL_FW_PATH = "${D}${base_libdir}/firmware"
-export KERNEL_SOURCE_ROOT = "${STAGING_KERNEL_DIR}"
+export KERNEL_SOURCE_ROOT = "${STAGING_KERNEL_BUILDDIR}"
 export ICP_BUILD_OUTPUT = "${D}"
 export DEST_LIBDIR = "${libdir}"
 export DEST_BINDIR = "${bindir}"
@@ -125,7 +105,6 @@ do_install() {
   install -D -m 0644 ${S}/quickassist/lookaside/access_layer/src/build/linux_2.6/user_space/libqat.a ${D}${base_libdir}
   install -D -m 0755 ${S}/quickassist/utilities/osal/src/build/linux_2.6/user_space/libosal_s.so ${D}${base_libdir}
   install -D -m 0644 ${S}/quickassist/utilities/osal/src/build/linux_2.6/user_space/libosal.a ${D}${base_libdir}
-  install -D -m 0644 ${S}/quickassist/lookaside/access_layer/src/qat_direct/src/libadf_user.a ${D}${base_libdir}/libadf.a
   install -D -m 0755 ${S}/quickassist/utilities/libusdm_drv/libusdm_drv_s.so ${D}${base_libdir}
   install -D -m 0644 ${S}/quickassist/utilities/libusdm_drv/libusdm_drv.a ${D}${base_libdir}
   install -D -m 0750 ${S}/quickassist/utilities/adf_ctl/adf_ctl ${D}${sbindir}
@@ -137,17 +116,6 @@ do_install() {
       mv ${D}/lib/modules ${D}${nonarch_base_libdir}
       rm -rf ${D}/lib
   fi
-
-  install -m 0644 ${S}/quickassist/qat/fw/qat_d15xx.bin  ${D}${nonarch_base_libdir}/firmware
-  install -m 0644 ${S}/quickassist/qat/fw/qat_d15xx_mmp.bin  ${D}${nonarch_base_libdir}/firmware
-
-  # ICE-D LCC
-  install -m 0644 ${S}/quickassist/qat/fw/qat_200xx.bin  ${D}${nonarch_base_libdir}/firmware
-  install -m 0644 ${S}/quickassist/qat/fw/qat_200xx_mmp.bin  ${D}${nonarch_base_libdir}/firmware
-
-  # ICE-D HCC
-  install -m 0644 ${S}/quickassist/qat/fw/qat_c4xxx.bin ${D}${nonarch_base_libdir}/firmware
-  install -m 0644 ${S}/quickassist/qat/fw/qat_c4xxx_mmp.bin ${D}${nonarch_base_libdir}/firmware
 
   install -d ${D}${QAT_HEADER_FILES}/include
   install -d ${D}${QAT_HEADER_FILES}/include/dc
@@ -164,9 +132,6 @@ do_install() {
   install -m 0644 ${S}/quickassist/lookaside/access_layer/src/sample_code/performance/compression/calgary  ${D}${nonarch_base_libdir}/firmware
   install -m 0644 ${S}/quickassist/lookaside/access_layer/src/sample_code/performance/compression/calgary32  ${D}${nonarch_base_libdir}/firmware
   install -m 0644 ${S}/quickassist/lookaside/access_layer/src/sample_code/performance/compression/canterbury  ${D}${nonarch_base_libdir}/firmware
-
-  #install qat source
-  cp ${DL_DIR}/QAT.L.${PV}.tar.gz ${D}${prefix}/src/qat/
 }
 
 SYSROOT_DIRS += "/opt"
@@ -187,6 +152,7 @@ FILES:${PN} += "\
 
 FILES:${PN}-dbg += "${sysconfdir}/init.d/.debug/ \
                     "
+
 # yasm encodes path to the input file and doesn't provide any option to workaround it.
 INSANE_SKIP:${PN}-staticdev += "buildpaths"
 INSANE_SKIP:${PN}-dbg += "buildpaths"
